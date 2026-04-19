@@ -1,0 +1,75 @@
+<atlassian-plugin key="${atlassian.plugin.key}" name="Markdown Extra for Bitbucket (MarkdownX)" plugins-version="2">
+    <plugin-info>
+        <description>Enhanced Markdown rendering for Bitbucket Data Center: Mermaid diagrams, PlantUML, and LaTeX math.</description>
+        <version>${project.version}</version>
+        <vendor name="Plainward Software" url="https://plainward.com"/>
+        <param name="plugin-icon">images/pluginIcon.png</param>
+        <param name="plugin-logo">images/pluginLogo.png</param>
+        <param name="atlassian-data-center-compatible">true</param>
+        <param name="atlassian-data-center-status">compatible</param>
+    </plugin-info>
+
+    <!-- ==================== Markdown Enhancer ==================== -->
+
+    <!-- Mermaid.js library (downloaded as resource, loaded by enhancer) -->
+    <client-resource key="mermaid-lib">
+        <resource type="download" name="mermaid.min.js" location="/static/lib/mermaid/mermaid.min.js"/>
+    </client-resource>
+
+    <!-- KaTeX library -->
+    <client-resource key="katex-lib">
+        <resource type="download" name="katex.min.js" location="/static/lib/katex/katex.min.js"/>
+        <resource type="download" name="katex.min.css" location="/static/lib/katex/katex.min.css"/>
+        <!-- KaTeX fonts (woff2) — CSS references them via url(fonts/...) -->
+        <resource type="download" name="fonts/KaTeX_AMS-Regular.woff2" location="/static/lib/katex/fonts/KaTeX_AMS-Regular.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Caligraphic-Bold.woff2" location="/static/lib/katex/fonts/KaTeX_Caligraphic-Bold.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Caligraphic-Regular.woff2" location="/static/lib/katex/fonts/KaTeX_Caligraphic-Regular.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Fraktur-Bold.woff2" location="/static/lib/katex/fonts/KaTeX_Fraktur-Bold.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Fraktur-Regular.woff2" location="/static/lib/katex/fonts/KaTeX_Fraktur-Regular.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Main-Bold.woff2" location="/static/lib/katex/fonts/KaTeX_Main-Bold.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Main-BoldItalic.woff2" location="/static/lib/katex/fonts/KaTeX_Main-BoldItalic.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Main-Italic.woff2" location="/static/lib/katex/fonts/KaTeX_Main-Italic.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Main-Regular.woff2" location="/static/lib/katex/fonts/KaTeX_Main-Regular.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Math-BoldItalic.woff2" location="/static/lib/katex/fonts/KaTeX_Math-BoldItalic.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Math-Italic.woff2" location="/static/lib/katex/fonts/KaTeX_Math-Italic.woff2"/>
+        <resource type="download" name="fonts/KaTeX_SansSerif-Bold.woff2" location="/static/lib/katex/fonts/KaTeX_SansSerif-Bold.woff2"/>
+        <resource type="download" name="fonts/KaTeX_SansSerif-Italic.woff2" location="/static/lib/katex/fonts/KaTeX_SansSerif-Italic.woff2"/>
+        <resource type="download" name="fonts/KaTeX_SansSerif-Regular.woff2" location="/static/lib/katex/fonts/KaTeX_SansSerif-Regular.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Script-Regular.woff2" location="/static/lib/katex/fonts/KaTeX_Script-Regular.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Size1-Regular.woff2" location="/static/lib/katex/fonts/KaTeX_Size1-Regular.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Size2-Regular.woff2" location="/static/lib/katex/fonts/KaTeX_Size2-Regular.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Size3-Regular.woff2" location="/static/lib/katex/fonts/KaTeX_Size3-Regular.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Size4-Regular.woff2" location="/static/lib/katex/fonts/KaTeX_Size4-Regular.woff2"/>
+        <resource type="download" name="fonts/KaTeX_Typewriter-Regular.woff2" location="/static/lib/katex/fonts/KaTeX_Typewriter-Regular.woff2"/>
+    </client-resource>
+
+    <!-- Main markdown enhancer: Mermaid + PlantUML + LaTeX (KaTeX) -->
+    <web-resource key="markdown-enhancer">
+        <resource type="download" name="markdown-enhancer.js" location="/static/markdownx-enhancer/markdown-enhancer-min.js"/>
+        <resource type="download" name="markdownx.css" location="/static/markdownx-enhancer/markdownx-min.css"/>
+        <dependency>com.atlassian.bitbucket.server.bitbucket-web:global</dependency>
+        <context>bitbucket.page.repository.fileContent</context>
+        <context>bitbucket.page.pullRequest.detail</context>
+        <context>bitbucket.page.commit.details</context>
+        <context>bitbucket.page.compare</context>
+        <context>bitbucket.page.repository.filebrowser</context>
+    </web-resource>
+
+    <!-- ==================== REST API ==================== -->
+
+    <rest key="markdownx-rest" path="/markdownx" version="1.0">
+        <package>com.plainward.bitbucket.markdownx.rest</package>
+    </rest>
+
+    <!-- ==================== Admin (SPA — no servlet, works on 8.x and 10.x) ==================== -->
+
+    <client-resource key="admin-resources">
+        <resource type="download" name="admin.html" location="/static/markdownx-admin/admin.html"/>
+    </client-resource>
+
+    <web-item key="markdownx-admin-link" name="MarkdownX Admin" section="atl.admin/admin-plugins-section" weight="100">
+        <label key="markdownx.admin.label"/>
+        <link>/download/resources/com.plainward.bitbucket.markdown-extra:admin-resources/admin.html</link>
+        <tooltip key="markdownx.admin.tooltip"/>
+    </web-item>
+</atlassian-plugin>

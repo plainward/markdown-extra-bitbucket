@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MarkdownX Settings</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f5f7; color: #172b4d; padding: 32px; }
+        .admin { max-width: 720px; margin: 0 auto; }
+        h1 { font-size: 24px; margin-bottom: 8px; }
+        .subtitle { color: #6b778c; margin-bottom: 24px; font-size: 14px; }
+        .subtitle a { color: #0052cc; text-decoration: none; }
+        .section { background: #fff; border: 1px solid #dfe1e6; border-radius: 3px; padding: 20px; margin-bottom: 16px; }
+        .section h2 { font-size: 16px; border-bottom: 1px solid #dfe1e6; padding-bottom: 8px; margin-bottom: 12px; }
+        .feature { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f4f5f7; }
+        .feature:last-child { border-bottom: none; }
+        .feature-info { flex: 1; }
+        .feature-name { font-weight: 600; }
+        .feature-desc { font-size: 12px; color: #6b778c; margin-top: 2px; }
+        .theme-select { padding: 6px 12px; border: 1px solid #dfe1e6; border-radius: 3px; }
+        .save-btn { padding: 8px 16px; background: #0052cc; color: #fff; border: none; border-radius: 3px; cursor: pointer; font-size: 14px; margin-top: 16px; }
+        .save-btn:hover { background: #0747a6; }
+        #status { margin-top: 12px; padding: 8px 12px; border-radius: 3px; display: none; }
+        #status.success { display: block; background: #e3fcef; color: #006644; }
+        #status.error { display: block; background: #ffebe6; color: #bf2600; }
+        #loading { text-align: center; padding: 40px; color: #6b778c; }
+        #error-auth { text-align: center; padding: 40px; color: #bf2600; display: none; }
+        .toggle { width: 40px; height: 22px; background: #dfe1e6; border-radius: 11px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+        .toggle.on { background: #36b37e; }
+        .toggle::after { content: ''; width: 18px; height: 18px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: left 0.2s; }
+        .toggle.on::after { left: 20px; }
+    </style>
+</head>
+<body>
+    <div class="admin">
+        <h1>MarkdownX Settings</h1>
+        <p class="subtitle">
+            <a href="javascript:history.back()">&larr; Back to admin</a>
+        </p>
+
+        <div id="loading">Loading settings...</div>
+        <div id="error-auth">Sign in as a system administrator to change settings.</div>
+        <div id="error-load" style="display:none; text-align:center; padding:40px; color:#bf2600">Failed to load settings. Check the Bitbucket server log and reload this page.</div>
+        <div id="content" style="display:none">
+
+            <div class="section">
+                <h2>Features</h2>
+                <div class="feature">
+                    <div class="feature-info">
+                        <span class="feature-name">Mermaid Diagrams</span>
+                        <div class="feature-desc">Render Mermaid diagrams from ```mermaid code blocks</div>
+                    </div>
+                    <div class="toggle" id="toggle-mermaid" data-key="mermaidEnabled"></div>
+                </div>
+                <div class="feature">
+                    <div class="feature-info">
+                        <span class="feature-name">PlantUML Diagrams</span>
+                        <div class="feature-desc">Server-side PlantUML rendering from ```plantuml code blocks</div>
+                    </div>
+                    <div class="toggle" id="toggle-plantuml" data-key="plantumlEnabled"></div>
+                </div>
+                <div class="feature">
+                    <div class="feature-info">
+                        <span class="feature-name">LaTeX Math</span>
+                        <div class="feature-desc">Render mathematical formulas with KaTeX</div>
+                    </div>
+                    <div class="toggle" id="toggle-math" data-key="mathEnabled"></div>
+                </div>
+                <div class="feature">
+                    <div class="feature-info">
+                        <span class="feature-name">Mermaid Theme</span>
+                        <div class="feature-desc">Visual theme for Mermaid diagrams</div>
+                    </div>
+                    <select id="mermaidTheme" class="theme-select">
+                        <option value="default">Default</option>
+                        <option value="dark">Dark</option>
+                        <option value="forest">Forest</option>
+                        <option value="neutral">Neutral</option>
+                    </select>
+                </div>
+                <button class="save-btn" id="save-btn">Save Settings</button>
+                <div id="status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            var base = window.location.pathname.replace(/\/download\/.*/, '');
+            var restBase = base + '/rest/markdownx/1.0';
+
+            function api(method, path, body) {
+                var opts = { method: method, credentials: 'same-origin', headers: { 'Accept': 'application/json' } };
+                if (body) {
+                    opts.headers['Content-Type'] = 'application/json';
+                    opts.body = JSON.stringify(body);
+                }
+                return fetch(restBase + path, opts);
+            }
+
+            function showLoadError() {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error-load').style.display = 'block';
+            }
+
+            // Load settings
+            api('GET', '/settings').then(function(r) {
+                if (r.status === 403) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error-auth').style.display = 'block';
+                    return null;
+                }
+                if (!r.ok) {
+                    showLoadError();
+                    return null;
+                }
+                return r.json().catch(function() { showLoadError(); return null; });
+            }).then(function(s) {
+                if (!s) return;
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+                var toggles = document.querySelectorAll('.toggle');
+                for (var i = 0; i < toggles.length; i++) {
+                    var t = toggles[i];
+                    if (s[t.dataset.key]) t.classList.add('on');
+                    t.addEventListener('click', function() { this.classList.toggle('on'); });
+                }
+                document.getElementById('mermaidTheme').value = s.mermaidTheme || 'default';
+            }).catch(showLoadError);
+
+            // Save
+            document.getElementById('save-btn').addEventListener('click', function() {
+                var settings = { mermaidTheme: document.getElementById('mermaidTheme').value };
+                var toggles = document.querySelectorAll('.toggle');
+                for (var i = 0; i < toggles.length; i++) {
+                    settings[toggles[i].dataset.key] = toggles[i].classList.contains('on');
+                }
+                var el = document.getElementById('status');
+                function showSaveError(msg) {
+                    el.style.display = '';
+                    el.className = 'error';
+                    el.textContent = msg || 'Failed to save settings';
+                }
+                api('PUT', '/settings', settings).then(function(r) {
+                    if (r.ok) {
+                        el.style.display = '';
+                        el.className = 'success';
+                        el.textContent = 'Settings saved successfully';
+                        setTimeout(function() { el.style.display = 'none'; }, 3000);
+                    } else if (r.status === 403) {
+                        showSaveError('System admin access required to save settings');
+                    } else {
+                        showSaveError('Failed to save settings (HTTP ' + r.status + ')');
+                    }
+                }).catch(function() {
+                    showSaveError('Network error while saving settings');
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

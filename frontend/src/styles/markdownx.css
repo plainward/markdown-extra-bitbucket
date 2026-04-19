@@ -1,0 +1,199 @@
+/* MarkdownX - Styles for enhanced markdown rendering */
+
+/* ==================== Mermaid Diagrams ==================== */
+
+.markdownx-mermaid-diagram {
+  position: relative;
+  margin: 16px 0;
+  padding: 16px;
+  background: #fafbfc;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.markdownx-mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdownx-source-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: #586069;
+  background: #f1f3f5;
+  border: 1px solid #d1d5da;
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.markdownx-mermaid-diagram:hover .markdownx-source-toggle {
+  opacity: 1;
+}
+
+.markdownx-source-toggle:hover {
+  background: #e1e4e8;
+}
+
+.markdownx-mermaid-source {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f6f8fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 4px;
+  text-align: left;
+  font-size: 13px;
+  overflow-x: auto;
+}
+
+.markdownx-mermaid-error {
+  margin: 8px 0;
+  padding: 12px;
+  background: #ffeef0;
+  border: 1px solid #fdaeb7;
+  border-radius: 4px;
+  color: #86181d;
+  font-size: 13px;
+}
+
+.markdownx-mermaid-error pre {
+  margin: 8px 0 0;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 3px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ==================== PlantUML ==================== */
+
+.markdownx-plantuml-diagram {
+  margin: 16px 0;
+  padding: 16px;
+  background: #fafbfc;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.markdownx-plantuml-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdownx-plantuml-error {
+  margin: 8px 0;
+  padding: 12px;
+  background: #ffeef0;
+  border: 1px solid #fdaeb7;
+  border-radius: 4px;
+  color: #86181d;
+  font-size: 13px;
+}
+
+/* ==================== Math (KaTeX) ==================== */
+
+.markdownx-math-block {
+  margin: 16px 0;
+  padding: 16px;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.markdownx-math-inline {
+  /* KaTeX handles its own styling */
+}
+
+.markdownx-math-error {
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  color: #856404;
+  font-size: 13px;
+}
+
+/* ==================== Shared ==================== */
+
+.markdownx-loading {
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: #f1f8ff;
+  border: 1px solid #c8e1ff;
+  border-radius: 4px;
+  color: #0366d6;
+  font-size: 13px;
+}
+
+.markdownx-loading::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  border: 2px solid #0366d6;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: markdownx-spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes markdownx-spin {
+  to { transform: rotate(360deg); }
+}
+
+.markdownx-error {
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: #ffeef0;
+  border: 1px solid #fdaeb7;
+  border-radius: 4px;
+  color: #86181d;
+  font-size: 13px;
+}
+
+/* ==================== Upgrade Prompt ==================== */
+
+.markdownx-upgrade-prompt {
+  margin: 16px 0;
+  padding: 24px;
+  background: linear-gradient(135deg, #f6f8fa 0%, #e9ecef 100%);
+  border: 1px solid #d1d5da;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.markdownx-upgrade-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.markdownx-upgrade-prompt p {
+  margin: 4px 0;
+  color: #586069;
+  font-size: 14px;
+}
+
+.markdownx-upgrade-link {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 20px;
+  background: #0366d6;
+  color: #fff !important;
+  text-decoration: none !important;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.markdownx-upgrade-link:hover {
+  background: #0256b9;
+}

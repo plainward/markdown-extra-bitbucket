@@ -1,0 +1,49 @@
+services:
+  bitbucket:
+    image: atlassian/bitbucket:${BITBUCKET_VERSION:-8.19.28}
+    container_name: bitbucket-8.19
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "7990:7990"    # HTTP
+      - "7999:7999"    # SSH (git)
+      - "5006:5005"    # JVM debug (5006 on host, 5005 inside container)
+    volumes:
+      - bitbucket-data:/var/atlassian/application-data/bitbucket
+    environment:
+      - JDBC_DRIVER=org.postgresql.Driver
+      - JDBC_URL=jdbc:postgresql://db:5432/bitbucket
+      - JDBC_USER=bitbucket
+      - JDBC_PASSWORD=bitbucket
+      - JVM_MINIMUM_MEMORY=1g
+      - JVM_MAXIMUM_MEMORY=4g
+      - JVM_SUPPORT_RECOMMENDED_ARGS=-Dupm.plugin.upload.enabled=true -Dmarkdownx.dev.mode=true -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:7990/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
+  db:
+    image: postgres:15.8
+    container_name: bitbucket-postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=bitbucket
+      - POSTGRES_PASSWORD=bitbucket
+      - POSTGRES_DB=bitbucket
+      - POSTGRES_ENCODING=UTF8
+      - POSTGRES_COLLATE=C
+      - POSTGRES_COLLATE_TYPE=C
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bitbucket -d bitbucket"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  bitbucket-data:
+  pgdata:

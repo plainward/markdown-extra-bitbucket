@@ -1,0 +1,19 @@
+{
+  "name": "markdownx-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:enhancer": "ENTRY=enhancer vite build",
+    "build:css": "cp src/styles/markdownx.css ../src/main/resources/static/markdownx-enhancer/markdownx-min.css",
+    "build:libs": "node scripts/copy-libs.js",
+    "build": "npm run build:enhancer && npm run build:css && npm run build:libs",
+    "dev": "ENTRY=enhancer vite build --watch"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "mermaid": "^11.4.0",
+    "katex": "^0.16.11"
+  }
+}
