@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] — 2026-05-10
+
+### Added
+
+- **Bitbucket Data Center 10.x support** via secondary `-bb10.jar` artifact with `javax.*` rewritten to `jakarta.*` (Apache Tomcat `jakartaee-migration` 1.0.8). Single source tree, both JARs produced by `mvn package`.
+- Cross-version Docker test infrastructure: `docker-compose.8x.yml`, `docker-compose.9x.yml` (Bitbucket 8.19.28 and 9.6.3) plus matching UPM upload scripts.
+- `docker/COMPAT-TESTING.md` documenting the verification matrix.
+
+### Security
+
+- `PlantUmlRestController.@POST /render` now requires authentication (`isAuthenticated()`) before invoking the PlantUML renderer. Closes an unauthenticated DoS vector.
+
+### Compatibility
+
+- Default JAR: Bitbucket Data Center 8.0 – 9.99
+- `-bb10` JAR: Bitbucket Data Center 10.0 and above
+
+[1.0.1]: https://github.com/plainward/markdown-extra-bitbucket/releases/tag/v1.0.1
+
 ## [1.0.0] — 2026-04-19
 
 Initial open source release under Apache License 2.0.

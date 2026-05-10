@@ -6,7 +6,7 @@
 
     <groupId>com.plainward.bitbucket</groupId>
     <artifactId>markdown-extra</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>atlassian-plugin</packaging>
 
     <name>Markdown Extra for Bitbucket (MarkdownX)</name>
