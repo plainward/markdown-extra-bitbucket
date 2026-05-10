@@ -40,6 +40,15 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
 
+        <!--
+            Build target = Bitbucket 8.19.0 (LTS). Plugin verified to run on:
+              - BB 8.19.28 (default JAR, javax.*)
+              - BB 9.6.3   (default JAR, javax.*)
+              - BB 10.2.1  (-bb10 JAR, jakarta.*, generated via Tomcat jakartaee-migration)
+            Marketplace compatibility ranges (set per artifact in Marketplace UI):
+              - default JAR: BB 8.0.0  – 9.99.99
+              - -bb10 JAR : BB 10.0.0 – open
+        -->
         <bitbucket.version>8.19.0</bitbucket.version>
         <amps.version>9.1.1</amps.version>
 
@@ -243,6 +252,37 @@
                         <phase>process-classes</phase>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- BB10 jakarta JAR — runs after package, rewrites javax.* -> jakarta.* -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-bb10-jar</id>
+                        <phase>package</phase>
+                        <goals><goal>java</goal></goals>
+                        <configuration>
+                            <mainClass>org.apache.tomcat.jakartaee.MigrationCLI</mainClass>
+                            <includePluginDependencies>true</includePluginDependencies>
+                            <classpathScope>compile</classpathScope>
+                            <arguments>
+                                <argument>-profile=EE</argument>
+                                <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
+                                <argument>${project.build.directory}/${project.build.finalName}-bb10.jar</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.tomcat</groupId>
+                        <artifactId>jakartaee-migration</artifactId>
+                        <version>1.0.8</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

@@ -1,5 +1,7 @@
 package com.plainward.bitbucket.markdownx.rest;
 
+import com.atlassian.bitbucket.auth.AuthenticationContext;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.plainward.bitbucket.markdownx.service.PlantUmlService;
 
 import javax.inject.Inject;
@@ -15,10 +17,13 @@ import java.util.Map;
 public class PlantUmlRestController {
 
     private final PlantUmlService plantUmlService;
+    private final AuthenticationContext authenticationContext;
 
     @Inject
-    public PlantUmlRestController(PlantUmlService plantUmlService) {
+    public PlantUmlRestController(PlantUmlService plantUmlService,
+                                  @ComponentImport AuthenticationContext authenticationContext) {
         this.plantUmlService = plantUmlService;
+        this.authenticationContext = authenticationContext;
     }
 
     @POST
@@ -26,6 +31,12 @@ public class PlantUmlRestController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response renderPlantUml(Map<String, String> request) {
+        if (!authenticationContext.isAuthenticated()) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Authentication required");
+            return Response.status(Response.Status.FORBIDDEN).entity(error).build();
+        }
+
         String source = request.get("source");
         if (source == null || source.trim().isEmpty()) {
             Map<String, String> error = new HashMap<>();
