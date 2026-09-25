@@ -45,7 +45,7 @@ mvn package -DskipTests
 
 ### Testing
 
-This repository does not ship unit tests yet. At minimum, before opening a PR please:
+Unit tests live in `src/test/java` and run with `mvn test` (or as part of `mvn package`). CI runs the full build on every pull request. Before opening a PR please also:
 
 1. Build the plugin (above).
 2. Start the bundled Bitbucket and install the JAR:

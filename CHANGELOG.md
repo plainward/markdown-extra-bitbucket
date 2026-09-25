@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] — Unreleased
+
+### Security
+
+- Mermaid now renders with `securityLevel: 'strict'` (was `'loose'`), which disables click callbacks, `javascript:` links and raw HTML labels. Previously any repository writer could embed script in a diagram.
+- KaTeX block math now renders with `trust: false`. `\href{javascript:...}`, `\htmlData` and friends are shown as plain text instead of producing live links.
+- PlantUML SVG is sanitized with DOMPurify instead of a hand-written attribute blocklist that missed most event handlers and `javascript:` links.
+- The admin page is now served by a servlet that requires `SYS_ADMIN` (anonymous users are sent to login) instead of a public static download resource.
+- PlantUML rendering has a 10 s timeout and a bounded worker pool; when the queue is full, `/plantuml/render` returns `503`.
+- The PlantUML `SANDBOX` security profile is pinned inside the plugin without leaving `PLANTUML_SECURITY_PROFILE` set JVM-wide.
+
+### Changed
+
+- Bundled PlantUML switched to the Apache-2.0 licensed `plantuml-asl` artifact (was the GPL-3.0 `plantuml` artifact).
+- Admin page moved to `/plugins/servlet/markdownx/admin`; the **Configure** button in Manage apps now opens it.
+
+### Fixed
+
+- The i18n bundle was never registered, so the admin menu showed the raw key `markdownx.admin.label`.
+- `POST /plantuml/render` with an empty body returned `500` instead of `400`.
+- Removed the unconditional console log on every page load.
+
+### Build
+
+- Unit tests (JUnit 5 + Mockito) for the PlantUML service, settings service and admin servlet.
+- GitHub Actions build workflow.
+- Frontend install uses `npm ci`.
+
 ## [1.0.1] — 2026-05-10
 
 ### Added

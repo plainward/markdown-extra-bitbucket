@@ -1,0 +1,32 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Runs npm ci + frontend build (frontend-maven-plugin), unit tests,
+      # then packages both the default and -bb10 JARs.
+      - name: Build and test
+        run: mvn -B package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: markdown-extra-jars
+          path: target/markdown-extra-*.jar
+          if-no-files-found: error

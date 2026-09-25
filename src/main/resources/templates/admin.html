@@ -35,7 +35,7 @@
     <div class="admin">
         <h1>MarkdownX Settings</h1>
         <p class="subtitle">
-            <a href="javascript:history.back()">&larr; Back to admin</a>
+            <a id="back-link" href="#">&larr; Back to admin</a>
         </p>
 
         <div id="loading">Loading settings...</div>
@@ -86,8 +86,9 @@
 
     <script>
         (function() {
-            var base = window.location.pathname.replace(/\/download\/.*/, '');
+            var base = window.location.pathname.replace(/\/plugins\/servlet\/.*/, '');
             var restBase = base + '/rest/markdownx/1.0';
+            document.getElementById('back-link').href = base + '/plugins/servlet/upm';
 
             function api(method, path, body) {
                 var opts = { method: method, credentials: 'same-origin', headers: { 'Accept': 'application/json' } };

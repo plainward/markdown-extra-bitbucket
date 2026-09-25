@@ -37,7 +37,7 @@ public class PlantUmlRestController {
             return Response.status(Response.Status.FORBIDDEN).entity(error).build();
         }
 
-        String source = request.get("source");
+        String source = request == null ? null : request.get("source");
         if (source == null || source.trim().isEmpty()) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Missing 'source' field");
@@ -49,6 +49,10 @@ public class PlantUmlRestController {
             Map<String, String> result = new HashMap<>();
             result.put("svg", svg);
             return Response.ok(result).build();
+        } catch (PlantUmlService.PlantUmlBusyException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(error).build();
         } catch (PlantUmlService.PlantUmlRenderException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());

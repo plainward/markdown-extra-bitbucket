@@ -65,7 +65,9 @@ export async function enhanceMath(container) {
       katex.render(source, wrapper, {
         displayMode: true,
         throwOnError: false,
-        trust: true,
+        // trust must stay off: \href{javascript:...}, \htmlData and
+        // \includegraphics are XSS vectors for anyone who can push Markdown.
+        trust: false,
       });
       preEl.replaceWith(wrapper);
     } catch (err) {

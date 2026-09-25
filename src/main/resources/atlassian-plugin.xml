@@ -7,7 +7,10 @@
         <param name="plugin-logo">images/pluginLogo.png</param>
         <param name="atlassian-data-center-compatible">true</param>
         <param name="atlassian-data-center-status">compatible</param>
+        <param name="configure.url">/plugins/servlet/markdownx/admin</param>
     </plugin-info>
+
+    <resource type="i18n" name="i18n" location="i18n/markdownx"/>
 
     <!-- ==================== Markdown Enhancer ==================== -->
 
@@ -61,15 +64,16 @@
         <package>com.plainward.bitbucket.markdownx.rest</package>
     </rest>
 
-    <!-- ==================== Admin (SPA — no servlet, works on 8.x and 10.x) ==================== -->
+    <!-- ==================== Admin ==================== -->
 
-    <client-resource key="admin-resources">
-        <resource type="download" name="admin.html" location="/static/markdownx-admin/admin.html"/>
-    </client-resource>
+    <!-- Servlet checks SYS_ADMIN before serving the page (works on 8.x and, via jakarta rewrite, 10.x) -->
+    <servlet key="markdownx-admin-servlet" name="MarkdownX Admin" class="com.plainward.bitbucket.markdownx.servlet.AdminServlet">
+        <url-pattern>/markdownx/admin</url-pattern>
+    </servlet>
 
     <web-item key="markdownx-admin-link" name="MarkdownX Admin" section="atl.admin/admin-plugins-section" weight="100">
         <label key="markdownx.admin.label"/>
-        <link>/download/resources/com.plainward.bitbucket.markdown-extra:admin-resources/admin.html</link>
+        <link>/plugins/servlet/markdownx/admin</link>
         <tooltip key="markdownx.admin.tooltip"/>
     </web-item>
 </atlassian-plugin>

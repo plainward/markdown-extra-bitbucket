@@ -6,7 +6,7 @@
 
     <groupId>com.plainward.bitbucket</groupId>
     <artifactId>markdown-extra</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <packaging>atlassian-plugin</packaging>
 
     <name>Markdown Extra for Bitbucket (MarkdownX)</name>
@@ -60,6 +60,8 @@
         <spring.version>5.3.29</spring.version>
         <atlassian.spring.scanner.version>2.2.4</atlassian.spring.scanner.version>
         <template.renderer.version>4.1.1</template.renderer.version>
+        <junit.version>5.10.2</junit.version>
+        <mockito.version>5.11.0</mockito.version>
 
         <node.version>v20.11.0</node.version>
         <npm.version>10.2.4</npm.version>
@@ -149,10 +151,11 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- PlantUML (bundled) -->
+        <!-- PlantUML (bundled). The -asl build is Apache-2.0 licensed; the plain
+             "plantuml" artifact is GPL-3.0 and cannot ship in an Apache-2.0 app. -->
         <dependency>
             <groupId>net.sourceforge.plantuml</groupId>
-            <artifactId>plantuml</artifactId>
+            <artifactId>plantuml-asl</artifactId>
             <version>${plantuml.version}</version>
             <scope>compile</scope>
         </dependency>
@@ -165,12 +168,34 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Spring (provided by platform) — DisposableBean for executor shutdown -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>${spring.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Gson (provided by platform) -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>${gson.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- Tests -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -198,7 +223,7 @@
                         <goals><goal>npm</goal></goals>
                         <phase>initialize</phase>
                         <configuration>
-                            <arguments>install</arguments>
+                            <arguments>ci --no-audit --no-fund</arguments>
                         </configuration>
                     </execution>
                     <execution>
@@ -210,6 +235,12 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
             </plugin>
 
             <!-- Atlassian AMPS -->

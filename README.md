@@ -61,7 +61,7 @@ export JAVA_HOME=/path/to/jdk21
 mvn package -DskipTests
 ```
 
-The resulting JAR is written to `target/markdown-extra-<version>.jar`.
+`mvn package` also runs the unit tests (drop `-DskipTests`). The resulting JARs are written to `target/markdown-extra-<version>.jar` (Bitbucket 8.x/9.x) and `target/markdown-extra-<version>-bb10.jar` (Bitbucket 10.x).
 
 ## Local deploy
 
@@ -90,7 +90,7 @@ For Bitbucket 10.x use `docker-compose.10x.yml` and `deploy-plugin-10x.sh` (runs
 | Spring scan config | `src/main/resources/META-INF/spring/plugin-context.xml` |
 | REST (settings, PlantUML) | `src/main/java/com/plainward/bitbucket/markdownx/rest/` |
 | Services (settings, PlantUML render) | `src/main/java/com/plainward/bitbucket/markdownx/service/` |
-| Admin SPA | `src/main/resources/static/markdownx-admin/` |
+| Admin page (servlet, SYS_ADMIN only) | `src/main/java/com/plainward/bitbucket/markdownx/servlet/`, `src/main/resources/templates/admin.html` |
 | Frontend orchestrator | `frontend/src/markdown-enhancer.js` |
 | Mermaid (iframe + Shadow DOM) | `frontend/src/mermaid-enhancer.js` |
 | PlantUML (REST → SVG) | `frontend/src/plantuml-enhancer.js` |
@@ -100,6 +100,7 @@ For Bitbucket 10.x use `docker-compose.10x.yml` and `deploy-plugin-10x.sh` (runs
 Two non-obvious choices are worth calling out:
 
 - **Mermaid renders inside a hidden `<iframe>`, then mounts into a Shadow DOM.** Bitbucket loads different CSS bundles per page context (`filebrowser` vs `fileContent`), and the page CSS corrupts Mermaid's `getBBox()` text measurements if it renders in an offscreen container on the host page. An iframe gives it a clean document.
+- **Rendering is locked down against stored XSS.** Anyone who can push Markdown controls the diagram source, so Mermaid runs with `securityLevel: 'strict'`, KaTeX with `trust: false`, and PlantUML SVG is passed through DOMPurify before insertion. PlantUML runs server-side in its `SANDBOX` security profile (no file or URL includes), with a render timeout and a bounded worker pool.
 - **Built JS is named `*-min.js` to bypass the AMPS YUI Compressor.** The compressor is ES3-only and silently destroys the ES6+ output from Vite; AMPS skips any filename with the `-min` suffix.
 
 ## Development
@@ -126,15 +127,17 @@ localStorage.removeItem('markdownx-debug');    // disable
 
 - File browser: `http://localhost:7990/projects/TEST/repos/test-markdown/browse?at=main`
 - File view: `http://localhost:7990/projects/TEST/repos/test-markdown/browse/README.md?at=main`
-- Admin: Bitbucket **Administration → Add-ons → MarkdownX Admin** (or open `http://localhost:7990/download/resources/com.plainward.bitbucket.markdown-extra:admin-resources/admin.html` directly)
+- Admin: Bitbucket **Administration → Add-ons → MarkdownX Admin** (or open `http://localhost:7990/plugins/servlet/markdownx/admin` directly, or click **Configure** in Manage apps)
 
 ## Compatibility
 
 | Bitbucket DC | Status |
 |--------------|--------|
-| 8.x (8.19+)  | Tested |
-| 9.x          | Expected to work |
-| 10.x         | Expected to work |
+| 8.x (8.19+)  | Tested — default JAR |
+| 9.x          | Tested on 9.6 — default JAR |
+| 10.x         | Tested on 10.2 — `-bb10` JAR |
+
+See [docker/COMPAT-TESTING.md](docker/COMPAT-TESTING.md) for the verification matrix.
 
 ## Contributing
 
@@ -147,3 +150,5 @@ Please report vulnerabilities privately — see [SECURITY.md](SECURITY.md).
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
+
+Bundled third-party libraries: PlantUML (`plantuml-asl`, Apache-2.0), Mermaid (MIT), KaTeX (MIT), DOMPurify (Apache-2.0 / MPL-2.0).

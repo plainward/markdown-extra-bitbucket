@@ -13,7 +13,8 @@
     "vite": "^5.4.0"
   },
   "dependencies": {
-    "mermaid": "^11.4.0",
-    "katex": "^0.16.11"
+    "dompurify": "^3.4.16",
+    "katex": "^0.16.11",
+    "mermaid": "^11.4.0"
   }
 }

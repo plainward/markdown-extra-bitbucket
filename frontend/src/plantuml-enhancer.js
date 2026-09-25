@@ -4,6 +4,8 @@
  * and replaces with rendered SVG.
  */
 
+import DOMPurify from 'dompurify';
+
 function getContextPath() {
   return (typeof AJS !== 'undefined' && AJS.contextPath) ? AJS.contextPath() : '';
 }
@@ -70,15 +72,9 @@ function escapeHtml(str) {
 }
 
 function sanitizeSvg(svgString) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(svgString, 'image/svg+xml');
-  doc.querySelectorAll('script, foreignObject').forEach(el => el.remove());
-  doc.querySelectorAll('[onload], [onerror], [onclick], [onmouseover]').forEach(el => {
-    el.removeAttribute('onload');
-    el.removeAttribute('onerror');
-    el.removeAttribute('onclick');
-    el.removeAttribute('onmouseover');
+  // PlantUML output embeds user-controlled text and [[links]], so treat it as
+  // untrusted: DOMPurify drops scripts, event handlers and javascript: URLs.
+  return DOMPurify.sanitize(svgString || '', {
+    USE_PROFILES: { svg: true, svgFilters: true },
   });
-  const svg = doc.querySelector('svg');
-  return svg ? svg.outerHTML : '';
 }

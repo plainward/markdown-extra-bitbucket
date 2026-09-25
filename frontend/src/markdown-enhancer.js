@@ -24,7 +24,7 @@ function log(msg, ...args) {
   console.log(`[MarkdownX +${(performance.now() - _t0).toFixed(1)}ms] ${msg}`, ...args);
 }
 
-console.log('[MarkdownX] Initializing v1.0.0' + (_debug ? ' (debug mode)' : ''));
+log('Initializing');
 
 function getContextPath() {
   return (typeof AJS !== 'undefined' && AJS.contextPath) ? AJS.contextPath() : '';

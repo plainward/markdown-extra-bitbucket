@@ -61,7 +61,10 @@ function getOrCreateRenderIframe(theme) {
       const config = {
         startOnLoad: false,
         theme: theme,
-        securityLevel: 'loose',
+        // 'strict' disables click callbacks, javascript: links and raw HTML
+        // labels. The SVG ends up in the host page's Shadow DOM, which does not
+        // sandbox scripts, so anything looser is stored XSS for repo writers.
+        securityLevel: 'strict',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         flowchart: { useMaxWidth: false },
         sequence: { useMaxWidth: false },
