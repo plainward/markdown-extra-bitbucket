@@ -12,7 +12,7 @@ BITBUCKET_URL="${1:-http://localhost:7990}"
 USERNAME="${2:-admin}"
 PASSWORD="${3:-admin}"
 
-PLUGIN_JAR=$(ls -t target/markdown-extra-*.jar 2>/dev/null | head -1)
+PLUGIN_JAR="${PLUGIN_JAR:-$(ls -t target/markdown-extra-*.jar 2>/dev/null | grep -v -- "-bb10\.jar$" | head -1)}"
 
 if [ -z "$PLUGIN_JAR" ]; then
     echo "ERROR: No JAR found in target/. Run 'mvn package' first."

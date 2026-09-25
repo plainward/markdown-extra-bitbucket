@@ -1,0 +1,117 @@
+name: Live test
+
+# Boots real Bitbucket Data Center in Docker (one version per job), installs the
+# freshly built plugin and runs test/live/smoke.mjs against it.
+# Requires the repository secret BITBUCKET_LICENSE (a Bitbucket DC timebomb key
+# from https://developer.atlassian.com/platform/marketplace/timebomb-licenses-for-testing-server-apps/).
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: mvn -B package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plugin-jars
+          path: target/markdown-extra-*.jar
+          if-no-files-found: error
+
+  live:
+    needs: build
+    # Fork PRs get no secrets; everything else must have the license.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - bitbucket: 8.19.28
+            jar: default
+          - bitbucket: 9.6.3
+            jar: default
+          - bitbucket: 10.2.1
+            jar: bb10
+    env:
+      BB_URL: http://localhost:7990
+      BB_VERSION: ${{ matrix.bitbucket }}
+      BITBUCKET_LICENSE: ${{ secrets.BITBUCKET_LICENSE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check license secret
+        run: |
+          if [ -z "$BITBUCKET_LICENSE" ]; then
+            echo "::error::Repository secret BITBUCKET_LICENSE is not set (Bitbucket DC timebomb license)."
+            exit 1
+          fi
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: plugin-jars
+          path: target
+
+      - name: Pick plugin JAR
+        run: |
+          if [ "${{ matrix.jar }}" = "bb10" ]; then
+            jar=$(ls target/markdown-extra-*-bb10.jar)
+          else
+            jar=$(ls target/markdown-extra-*.jar | grep -v -- '-bb10\.jar$')
+          fi
+          echo "PLUGIN_JAR=$PWD/$jar" >> "$GITHUB_ENV"
+          echo "Using $jar"
+
+      - name: Start Bitbucket, install plugin, seed data
+        run: test/live/setup.sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        working-directory: test/live
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.47.2
+          npx playwright install --with-deps chromium
+
+      - name: Smoke test
+        working-directory: test/live
+        run: node smoke.mjs
+
+      - name: Check Bitbucket log for plugin errors
+        if: always()
+        run: |
+          docker exec bitbucket cat /var/atlassian/application-data/bitbucket/log/atlassian-bitbucket.log > atlassian-bitbucket.log || true
+          if grep -n -i -E 'markdownx|plainward|markdown-extra' atlassian-bitbucket.log | grep -E 'ERROR|Exception|Cannot resolve'; then
+            echo "::error::Plugin-related errors in atlassian-bitbucket.log"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-${{ matrix.bitbucket }}
+          path: |
+            test/live/live-results/
+            atlassian-bitbucket.log
+            plugin-info.json
+          if-no-files-found: ignore

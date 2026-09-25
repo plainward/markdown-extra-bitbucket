@@ -40,3 +40,9 @@ Thumbs.db
 .env.local
 docker/.env
 sast-report.json
+
+# Live test
+test/live/node_modules/
+test/live/live-results/
+plugin-info.json
+atlassian-bitbucket.log

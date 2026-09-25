@@ -1,5 +1,7 @@
 # Cross-version compatibility testing
 
+> **Автоматизировано:** workflow `.github/workflows/live-test.yml` поднимает Bitbucket 8.19 / 9.6 / 10.2 в Docker, ставит свежесобранный JAR и прогоняет `test/live/smoke.mjs` (рендеринг, XSS, права админки и REST, i18n, лог). Нужен секрет репозитория `BITBUCKET_LICENSE` — timebomb-лицензия Bitbucket DC. Локально: `BB_VERSION=8.19.28 PLUGIN_JAR=target/markdown-extra-1.0.2.jar BITBUCKET_LICENSE=... test/live/setup.sh && (cd test/live && node smoke.mjs)`.
+
 Цель: проверить работу `markdown-extra` (1.0.0) на Bitbucket DC **8.19**, **9.6**, **10.2**, чтобы понять — возможен ли единый JAR или нужны Maven-профили.
 
 ## Раскладка инстансов
