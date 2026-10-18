@@ -22,11 +22,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Bitbucket 10 Content Security Policy: Mermaid and KaTeX were loaded from `/download/resources/` without the page nonce, which Bitbucket 10's `script-src` rejects (currently reported, blocked once enforced). Injected scripts now carry the page's CSP nonce, including inside the Mermaid render iframe.
 - The i18n bundle was never registered, so the admin menu showed the raw key `markdownx.admin.label`.
 - `POST /plantuml/render` with an empty body returned `500` instead of `400`.
 - Removed the unconditional console log on every page load.
 
 ### Build
+
+- Live test workflow: Bitbucket 8.19.28, 9.6.3 and 10.2.1 in Docker, plugin installed through UPM, Playwright smoke test (rendering, XSS, permissions, i18n, CSP, log scan).
 
 - Unit tests (JUnit 5 + Mockito) for the PlantUML service, settings service and admin servlet.
 - GitHub Actions build workflow.

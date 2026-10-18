@@ -9,6 +9,8 @@
  * Debug logging: localStorage.setItem('markdownx-debug', '1') and reload.
  */
 
+import { createScript } from './utils/csp.js';
+
 const processedBlocks = new WeakSet();
 const _debug = typeof localStorage !== 'undefined' && localStorage.getItem('markdownx-debug') === '1';
 const t0 = performance.now();
@@ -49,9 +51,9 @@ function getOrCreateRenderIframe(theme) {
       'body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:16px}';
     iframeDoc.head.appendChild(style);
 
-    const script = iframeDoc.createElement('script');
-    script.src = getContextPath() +
-      '/download/resources/com.plainward.bitbucket.markdown-extra:mermaid-lib/mermaid.min.js';
+    // The about:blank iframe inherits the page's CSP, so it needs the nonce too.
+    const script = createScript(iframeDoc, getContextPath() +
+      '/download/resources/com.plainward.bitbucket.markdown-extra:mermaid-lib/mermaid.min.js');
     script.onload = () => {
       const iframeMermaid = iframe.contentWindow.mermaid;
       if (!iframeMermaid) {

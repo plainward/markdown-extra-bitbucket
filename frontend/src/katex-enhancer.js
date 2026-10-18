@@ -4,6 +4,8 @@
  * renders them using KaTeX.
  */
 
+import { createScript } from './utils/csp.js';
+
 let katexLoaded = false;
 let katexLoading = null;
 const processedBlocks = new WeakSet();
@@ -26,9 +28,8 @@ async function loadKaTeX() {
     document.head.appendChild(link);
 
     // Load JS
-    const script = document.createElement('script');
-    script.src = ctx +
-      '/download/resources/com.plainward.bitbucket.markdown-extra:katex-lib/katex.min.js';
+    const script = createScript(document, ctx +
+      '/download/resources/com.plainward.bitbucket.markdown-extra:katex-lib/katex.min.js');
     script.onload = () => {
       if (window.katex) {
         katexLoaded = true;
