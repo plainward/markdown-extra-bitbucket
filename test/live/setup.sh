@@ -12,7 +12,13 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 
 : "${BB_VERSION:?BB_VERSION is required}"
 : "${PLUGIN_JAR:?PLUGIN_JAR is required}"
-: "${BITBUCKET_LICENSE:?BITBUCKET_LICENSE is required (Bitbucket DC timebomb license)}"
+# Atlassian's public "Developer Test License" for Bitbucket DC (valid 3 hours from
+# server start), published for app testing at
+# https://developer.atlassian.com/platform/marketplace/timebomb-licenses-for-testing-server-apps/
+# Set BITBUCKET_LICENSE to override it.
+if [ -z "${BITBUCKET_LICENSE:-}" ]; then
+  BITBUCKET_LICENSE="$(tr -d '[:space:]' < "$HERE/bitbucket-dc-timebomb.license")"
+fi
 
 echo "::group::Start Bitbucket $BB_VERSION"
 docker run -d --name bitbucket -p 7990:7990 \

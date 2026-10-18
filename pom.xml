@@ -259,12 +259,9 @@
                         <Atlassian-Plugin-Key>${atlassian.plugin.key}</Atlassian-Plugin-Key>
                         <Spring-Context>*</Spring-Context>
                         <Import-Package>
-                            com.plainward.bitbucket.markdownx.*,
                             com.atlassian.*;resolution:=optional,
                             javax.*;resolution:=optional,
                             org.springframework.*;resolution:=optional,
-                            org.eclipse.*;resolution:=optional,
-                            org.osgi.*;resolution:=optional,
                             *;resolution:=optional
                         </Import-Package>
                         <Export-Package/>

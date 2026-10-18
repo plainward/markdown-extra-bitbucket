@@ -2,8 +2,8 @@ name: Live test
 
 # Boots real Bitbucket Data Center in Docker (one version per job), installs the
 # freshly built plugin and runs test/live/smoke.mjs against it.
-# Requires the repository secret BITBUCKET_LICENSE (a Bitbucket DC timebomb key
-# from https://developer.atlassian.com/platform/marketplace/timebomb-licenses-for-testing-server-apps/).
+# Uses Atlassian's public Bitbucket DC timebomb license from test/live/; a
+# repository secret BITBUCKET_LICENSE, if set, overrides it.
 
 on:
   push:
@@ -37,8 +37,6 @@ jobs:
 
   live:
     needs: build
-    # Fork PRs get no secrets; everything else must have the license.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
@@ -57,13 +55,6 @@ jobs:
       BITBUCKET_LICENSE: ${{ secrets.BITBUCKET_LICENSE }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Check license secret
-        run: |
-          if [ -z "$BITBUCKET_LICENSE" ]; then
-            echo "::error::Repository secret BITBUCKET_LICENSE is not set (Bitbucket DC timebomb license)."
-            exit 1
-          fi
 
       - uses: actions/download-artifact@v4
         with:
