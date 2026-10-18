@@ -25,6 +25,10 @@ All features run everywhere rendered Markdown appears: file view, file browser, 
 2. In Bitbucket: **Administration → Manage apps → Upload app**.
 3. Upload the JAR. That's it — all features are active.
 
+Use `markdown-extra-<version>.jar` on Bitbucket 8.x/9.x and `markdown-extra-<version>-bb10.jar` on Bitbucket 10.x.
+
+> **Bitbucket 10.x:** UPM only installs signed apps. Builds from the Atlassian Marketplace are signed by Atlassian; a JAR from GitHub Releases is not, and upload fails with *"Signature check failed!"*. Install from the Marketplace, or on a test instance start Bitbucket with `-Datlassian.upm.signature.check.disabled=true`.
+
 ## Usage
 
 Just write regular Markdown:

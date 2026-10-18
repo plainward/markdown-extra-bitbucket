@@ -23,6 +23,8 @@ fi
 echo "::group::Start Bitbucket $BB_VERSION"
 # Bitbucket 10 blocks basic auth by default; atlassian-authentication-plugin reads
 # ...basic.auth.filter.force.allow via Boolean.getBoolean to let it through.
+# Bitbucket 10's UPM also rejects unsigned apps ("Signature check failed!");
+# Marketplace builds are signed by Atlassian, CI builds are not.
 docker run -d --name bitbucket -p 7990:7990 \
   -e SETUP_DISPLAYNAME="MarkdownX CI" \
   -e SETUP_BASEURL="$BB_URL" \
@@ -33,7 +35,7 @@ docker run -d --name bitbucket -p 7990:7990 \
   -e SETUP_SYSADMIN_EMAILADDRESS=admin@example.com \
   -e SEARCH_ENABLED=false \
   -e JVM_MINIMUM_MEMORY=1g -e JVM_MAXIMUM_MEMORY=3g \
-  -e JVM_SUPPORT_RECOMMENDED_ARGS="-Dupm.plugin.upload.enabled=true -Dfeature.auth.basic-auth.enabled=true -Dcom.atlassian.plugins.authentication.basic.auth.filter.force.allow=true" \
+  -e JVM_SUPPORT_RECOMMENDED_ARGS="-Dupm.plugin.upload.enabled=true -Dfeature.auth.basic-auth.enabled=true -Dcom.atlassian.plugins.authentication.basic.auth.filter.force.allow=true -Datlassian.upm.signature.check.disabled=true" \
   "atlassian/bitbucket:$BB_VERSION"
 
 for i in $(seq 1 120); do
@@ -75,8 +77,25 @@ if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
   exit 1
 fi
 
+# The upload only queues an install task; wait for it and surface its error.
+task=$(echo "$upload" | grep -o '/rest/plugins/1.0/pending/[^"]*' | head -1 || true)
+if [ -n "$task" ]; then
+  for i in $(seq 1 60); do
+    status=$(curl -s -u "$ADMIN" "$BB_URL$task" || true)
+    echo "$status" | grep -q '"done":true' && break
+    sleep 3
+  done
+  if echo "$status" | grep -q 'install.err'; then
+    echo "::error::UPM could not install the plugin"
+    echo "$status"
+    docker exec bitbucket grep -i -E 'upm|markdown-extra|plainward' \
+      /var/atlassian/application-data/bitbucket/log/atlassian-bitbucket.log | tail -40 || true
+    exit 1
+  fi
+fi
+
 for i in $(seq 1 60); do
-  info=$(curl -s -u "$ADMIN" -H 'Accept: application/json' "$BB_URL/rest/plugins/1.0/$PLUGIN_KEY-key" || true)
+  info=$(curl -s -u "$ADMIN" "$BB_URL/rest/plugins/1.0/$PLUGIN_KEY-key" || true)
   if echo "$info" | grep -q '"enabled":true'; then break; fi
   sleep 5
 done
