@@ -76,14 +76,18 @@ if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
 fi
 
 for i in $(seq 1 60); do
-  info=$(curl -s -u "$ADMIN" "$BB_URL/rest/plugins/1.0/$PLUGIN_KEY-key" || true)
+  info=$(curl -s -u "$ADMIN" -H 'Accept: application/json' "$BB_URL/rest/plugins/1.0/$PLUGIN_KEY-key" || true)
   if echo "$info" | grep -q '"enabled":true'; then break; fi
   sleep 5
 done
 echo "$info" > plugin-info.json
-python3 - <<'PY'
+if ! python3 - <<'PY'
 import json, sys
-info = json.load(open("plugin-info.json"))
+raw = open("plugin-info.json").read()
+try:
+    info = json.loads(raw)
+except ValueError:
+    sys.exit("UPM plugin info is not JSON:\n" + raw[:3000])
 if not info.get("enabled"):
     sys.exit("plugin is not enabled: " + json.dumps(info)[:2000])
 disabled = [m["key"] for m in info.get("modules", []) if not m.get("enabled")]
@@ -91,6 +95,12 @@ if disabled:
     sys.exit("disabled modules: %s" % disabled)
 print("plugin %s enabled, %d modules enabled" % (info.get("version"), len(info.get("modules", []))))
 PY
+then
+  echo "--- plugin lines from atlassian-bitbucket.log ---"
+  docker exec bitbucket grep -i -E 'markdown-extra|markdownx|plainward' \
+    /var/atlassian/application-data/bitbucket/log/atlassian-bitbucket.log | tail -60 || true
+  exit 1
+fi
 echo "::endgroup::"
 
 echo "::group::Seed users and repository"
