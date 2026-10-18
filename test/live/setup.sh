@@ -44,6 +44,30 @@ done
 [ "$state" = "RUNNING" ] || { echo "Bitbucket did not start"; docker logs bitbucket | tail -200; exit 1; }
 echo "::endgroup::"
 
+# Bitbucket 10 blocks basic auth by default (ignores feature.auth.basic-auth.enabled).
+# Sign in through the login form and lift the block via the auth config REST API.
+if curl -s -u "$ADMIN" "$BB_URL/rest/api/1.0/users/admin" | grep -q "Basic Authentication has been disabled"; then
+  echo "::group::Re-enable basic auth"
+  jar=$(mktemp)
+  curl -s -c "$jar" -b "$jar" -o /dev/null "$BB_URL/login"
+  curl -s -c "$jar" -b "$jar" -o /dev/null -w 'form login: HTTP %{http_code}\n' \
+    -H 'X-Atlassian-Token: no-check' \
+    --data-urlencode j_username=admin --data-urlencode j_password=admin \
+    --data-urlencode _atl_remember_me=on --data-urlencode submit='Log in' \
+    "$BB_URL/j_atl_security_check"
+  echo "current: $(curl -s -b "$jar" -H 'Accept: application/json' "$BB_URL/rest/authconfig/1.0/basicauth")"
+  curl -s -b "$jar" -X PUT -H 'Content-Type: application/json' -H 'X-Atlassian-Token: no-check' \
+    -w '\nupdate: HTTP %{http_code}\n' \
+    -d '{"block-requests":false,"allowed-users":[],"allowed-paths":[],"show-warning-message":false}' \
+    "$BB_URL/rest/authconfig/1.0/basicauth"
+  if curl -s -u "$ADMIN" "$BB_URL/rest/api/1.0/users/admin" | grep -q "Basic Authentication has been disabled"; then
+    echo "::error::Could not re-enable basic auth on Bitbucket $BB_VERSION"
+    exit 1
+  fi
+  echo "basic auth enabled"
+  echo "::endgroup::"
+fi
+
 echo "::group::Install plugin $(basename "$PLUGIN_JAR")"
 # UPM can come up after /status reports RUNNING, so retry. Use GET, not HEAD.
 TOKEN=""
