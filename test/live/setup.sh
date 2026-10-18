@@ -45,9 +45,28 @@ done
 echo "::endgroup::"
 
 echo "::group::Install plugin $(basename "$PLUGIN_JAR")"
-TOKEN=$(curl -s -u "$ADMIN" -I "$BB_URL/rest/plugins/1.0/?os_authType=basic" | grep -i '^upm-token' | sed 's/.*: //' | tr -d '\r\n')
-[ -n "$TOKEN" ] || { echo "No UPM token"; exit 1; }
-curl -sf -u "$ADMIN" -F "plugin=@$PLUGIN_JAR" "$BB_URL/rest/plugins/1.0/?token=$TOKEN" >/dev/null
+# UPM can come up after /status reports RUNNING, so retry. Use GET, not HEAD.
+TOKEN=""
+for i in $(seq 1 30); do
+  TOKEN=$(curl -s -u "$ADMIN" -D - -o /dev/null "$BB_URL/rest/plugins/1.0/?os_authType=basic" \
+    | grep -i '^upm-token' | sed 's/.*: //' | tr -d '\r\n' || true)
+  [ -n "$TOKEN" ] && break
+  echo "[$i] waiting for UPM token"
+  sleep 10
+done
+if [ -z "$TOKEN" ]; then
+  echo "::error::No UPM token from $BB_URL/rest/plugins/1.0/"
+  curl -s -u "$ADMIN" -i "$BB_URL/rest/plugins/1.0/?os_authType=basic" | head -40 || true
+  docker logs bitbucket 2>&1 | tail -80
+  exit 1
+fi
+upload=$(curl -s -u "$ADMIN" -w '\n%{http_code}' -F "plugin=@$PLUGIN_JAR" "$BB_URL/rest/plugins/1.0/?token=$TOKEN")
+code=$(echo "$upload" | tail -1)
+if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+  echo "::error::UPM upload failed with HTTP $code"
+  echo "$upload" | head -40
+  exit 1
+fi
 
 for i in $(seq 1 60); do
   info=$(curl -s -u "$ADMIN" "$BB_URL/rest/plugins/1.0/$PLUGIN_KEY-key" || true)

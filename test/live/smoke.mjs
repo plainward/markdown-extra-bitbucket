@@ -108,7 +108,9 @@ await check('PlantUML REST: sandbox blocks local file include', async () => {
 // ---------- Browser checks ----------
 
 const browser = await chromium.launch();
-const context = await browser.newContext({ viewport: { width: 1400, height: 1000 } });
+// Authenticate every browser request with basic auth rather than driving the
+// login form, whose markup differs between Bitbucket 8.x, 9.x and 10.x.
+const context = await browser.newContext({ viewport: { width: 1400, height: 1000 }, extraHTTPHeaders: ADMIN });
 const page = await context.newPage();
 const dialogs = [];
 const consoleErrors = [];
@@ -116,12 +118,9 @@ page.on('dialog', (d) => { dialogs.push(d.message()); d.dismiss().catch(() => {}
 page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
 page.on('pageerror', (e) => consoleErrors.push(String(e)));
 
-await check('login as admin', async () => {
-  await page.goto(BB + '/login');
-  await page.fill('input[name="j_username"]', 'admin');
-  await page.fill('input[name="j_password"]', 'admin');
-  await Promise.all([page.waitForNavigation({ timeout: 60_000 }), page.press('input[name="j_password"]', 'Enter')]);
-  assert(!page.url().includes('/login'), `still on login page: ${page.url()}`);
+await check('browser is signed in as admin', async () => {
+  await page.goto(BB + '/plugins/servlet/markdownx/admin');
+  assert(!page.url().includes('/login'), `redirected to login: ${page.url()}`);
 });
 
 // Collects rendering state across the document and any shadow roots.
@@ -171,6 +170,8 @@ async function checkRenderedPage(label, path) {
 
   await check(`${label}: XSS payloads are neutralised`, async () => {
     const s = await renderState();
+    // Without rendered output there is nothing to check, so this must not pass vacuously.
+    assert(s.mermaid && s.plantuml && s.mathBlock, 'nothing rendered, XSS check would be vacuous');
     assert(s.jsLinks.length === 0, `javascript: links present: ${JSON.stringify(s.jsLinks)}`);
     assert(s.handlers === 0, `${s.handlers} inline event handler attribute(s) in rendered output`);
     // Click everything clickable in the rendered output; nothing may fire.
