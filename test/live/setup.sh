@@ -21,6 +21,8 @@ if [ -z "${BITBUCKET_LICENSE:-}" ]; then
 fi
 
 echo "::group::Start Bitbucket $BB_VERSION"
+# Bitbucket 10 blocks basic auth by default; atlassian-authentication-plugin reads
+# ...basic.auth.filter.force.allow via Boolean.getBoolean to let it through.
 docker run -d --name bitbucket -p 7990:7990 \
   -e SETUP_DISPLAYNAME="MarkdownX CI" \
   -e SETUP_BASEURL="$BB_URL" \
@@ -31,7 +33,7 @@ docker run -d --name bitbucket -p 7990:7990 \
   -e SETUP_SYSADMIN_EMAILADDRESS=admin@example.com \
   -e SEARCH_ENABLED=false \
   -e JVM_MINIMUM_MEMORY=1g -e JVM_MAXIMUM_MEMORY=3g \
-  -e JVM_SUPPORT_RECOMMENDED_ARGS="-Dupm.plugin.upload.enabled=true -Dfeature.auth.basic-auth.enabled=true" \
+  -e JVM_SUPPORT_RECOMMENDED_ARGS="-Dupm.plugin.upload.enabled=true -Dfeature.auth.basic-auth.enabled=true -Dcom.atlassian.plugins.authentication.basic.auth.filter.force.allow=true" \
   "atlassian/bitbucket:$BB_VERSION"
 
 for i in $(seq 1 120); do
@@ -44,28 +46,9 @@ done
 [ "$state" = "RUNNING" ] || { echo "Bitbucket did not start"; docker logs bitbucket | tail -200; exit 1; }
 echo "::endgroup::"
 
-# Bitbucket 10 blocks basic auth by default (ignores feature.auth.basic-auth.enabled).
-# Sign in through the login form and lift the block via the auth config REST API.
 if curl -s -u "$ADMIN" "$BB_URL/rest/api/1.0/users/admin" | grep -q "Basic Authentication has been disabled"; then
-  echo "::group::Re-enable basic auth"
-  jar=$(mktemp)
-  curl -s -c "$jar" -b "$jar" -o /dev/null "$BB_URL/login"
-  curl -s -c "$jar" -b "$jar" -o /dev/null -w 'form login: HTTP %{http_code}\n' \
-    -H 'X-Atlassian-Token: no-check' \
-    --data-urlencode j_username=admin --data-urlencode j_password=admin \
-    --data-urlencode _atl_remember_me=on --data-urlencode submit='Log in' \
-    "$BB_URL/j_atl_security_check"
-  echo "current: $(curl -s -b "$jar" -H 'Accept: application/json' "$BB_URL/rest/authconfig/1.0/basicauth")"
-  curl -s -b "$jar" -X PUT -H 'Content-Type: application/json' -H 'X-Atlassian-Token: no-check' \
-    -w '\nupdate: HTTP %{http_code}\n' \
-    -d '{"block-requests":false,"allowed-users":[],"allowed-paths":[],"show-warning-message":false}' \
-    "$BB_URL/rest/authconfig/1.0/basicauth"
-  if curl -s -u "$ADMIN" "$BB_URL/rest/api/1.0/users/admin" | grep -q "Basic Authentication has been disabled"; then
-    echo "::error::Could not re-enable basic auth on Bitbucket $BB_VERSION"
-    exit 1
-  fi
-  echo "basic auth enabled"
-  echo "::endgroup::"
+  echo "::error::Basic auth is blocked on Bitbucket $BB_VERSION despite force.allow"
+  exit 1
 fi
 
 echo "::group::Install plugin $(basename "$PLUGIN_JAR")"
