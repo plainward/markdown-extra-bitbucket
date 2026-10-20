@@ -5,6 +5,7 @@
  */
 
 import { createScript } from './utils/csp.js';
+import { hasInlineMath, splitInlineMath } from './utils/inline-math.mjs';
 
 let katexLoaded = false;
 let katexLoading = null;
@@ -91,7 +92,7 @@ export async function enhanceMath(container) {
         return NodeFilter.FILTER_REJECT;
       }
       // Must contain $...$
-      if (/\$\$[^$]+\$\$/.test(node.textContent) || /\$[^$]+\$/.test(node.textContent)) {
+      if (hasInlineMath(node.textContent)) {
         return NodeFilter.FILTER_ACCEPT;
       }
       return NodeFilter.FILTER_SKIP;
@@ -108,16 +109,15 @@ export async function enhanceMath(container) {
   const katex = await loadKaTeX();
 
   for (const textNode of textNodes) {
-    const text = textNode.textContent;
-    const parts = text.split(/(\$\$[^$]+\$\$|\$[^$]+\$)/g);
-    if (parts.length <= 1) continue;
+    const parts = splitInlineMath(textNode.textContent);
+    if (!parts.some((part) => 'math' in part)) continue;
 
     const frag = document.createDocumentFragment();
     for (const part of parts) {
-      if (part.startsWith('$') && part.endsWith('$') && part.length > 2) {
+      if ('math' in part) {
         // $$...$$ → display mode, $...$ → inline mode
-        const isDisplay = part.startsWith('$$') && part.endsWith('$$') && part.length > 4;
-        const mathSource = isDisplay ? part.slice(2, -2) : part.slice(1, -1);
+        const isDisplay = part.display;
+        const mathSource = part.math;
         const el = document.createElement(isDisplay ? 'div' : 'span');
         el.className = isDisplay ? 'markdownx-math-block' : 'markdownx-math-inline';
         try {
@@ -126,11 +126,11 @@ export async function enhanceMath(container) {
             throwOnError: false,
           });
         } catch {
-          el.textContent = part;
+          el.textContent = isDisplay ? `$$${mathSource}$$` : `$${mathSource}$`;
         }
         frag.appendChild(el);
       } else {
-        frag.appendChild(document.createTextNode(part));
+        frag.appendChild(document.createTextNode(part.text));
       }
     }
     textNode.replaceWith(frag);

@@ -7,7 +7,8 @@
     "build:css": "cp src/styles/markdownx.css ../src/main/resources/static/markdownx-enhancer/markdownx-min.css",
     "build:libs": "node scripts/copy-libs.js",
     "build": "npm run build:enhancer && npm run build:css && npm run build:libs",
-    "dev": "ENTRY=enhancer vite build --watch"
+    "dev": "ENTRY=enhancer vite build --watch",
+    "test": "node --test test/inline-math.test.mjs"
   },
   "devDependencies": {
     "vite": "^5.4.0"
