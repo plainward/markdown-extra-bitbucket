@@ -84,7 +84,7 @@ public class PlantUmlService implements DisposableBean {
         if (!wrappedSource.startsWith("@start")) {
             wrappedSource = "@startuml\n" + wrappedSource + "\n@enduml";
         }
-        final String finalSource = wrappedSource;
+        final String finalSource = withSmetanaLayout(wrappedSource);
 
         Future<String> future;
         try {
@@ -109,6 +109,23 @@ public class PlantUmlService implements DisposableBean {
             }
             throw new PlantUmlRenderException("Failed to render PlantUML: " + cause.getMessage(), cause);
         }
+    }
+
+    /**
+     * Class, component and state diagrams need Graphviz {@code dot}, which Bitbucket
+     * servers usually do not have, and PlantUML then returns an error image instead of
+     * failing. The built-in Smetana layout needs no external process. A layout pragma
+     * written by the user wins.
+     */
+    static String withSmetanaLayout(String source) {
+        if (!source.startsWith("@startuml") || source.toLowerCase().contains("!pragma layout")) {
+            return source;
+        }
+        int eol = source.indexOf('\n');
+        if (eol < 0) {
+            return source;
+        }
+        return source.substring(0, eol + 1) + "!pragma layout smetana\n" + source.substring(eol + 1);
     }
 
     private static String doRender(String source) throws PlantUmlRenderException {

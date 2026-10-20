@@ -31,6 +31,25 @@ class PlantUmlServiceTest {
     }
 
     @Test
+    void rendersClassDiagramWithoutGraphviz() throws Exception {
+        service = new PlantUmlService();
+        String svg = service.renderSvg("class Order {\n  +total()\n}\nclass Line\nOrder *-- Line");
+        assertTrue(svg.contains("Order"), svg);
+        assertFalse(svg.contains("Graphviz"), svg);
+        assertFalse(svg.contains("Cannot find"), svg);
+    }
+
+    @Test
+    void keepsLayoutPragmaWrittenByUser() {
+        String src = "@startuml\n!pragma layout elk\nA -> B\n@enduml";
+        assertEquals(src, PlantUmlService.withSmetanaLayout(src));
+        assertEquals("@startuml\n!pragma layout smetana\nA -> B\n@enduml",
+                PlantUmlService.withSmetanaLayout("@startuml\nA -> B\n@enduml"));
+        assertEquals("@startmindmap\n* a\n@endmindmap",
+                PlantUmlService.withSmetanaLayout("@startmindmap\n* a\n@endmindmap"));
+    }
+
+    @Test
     void rejectsEmptyAndOversizedSource() {
         service = new PlantUmlService();
         assertThrows(PlantUmlService.PlantUmlRenderException.class, () -> service.renderSvg("  "));
