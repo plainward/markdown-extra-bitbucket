@@ -142,8 +142,11 @@ async function renderState() {
       mermaid: [...document.querySelectorAll('.markdownx-mermaid-diagram')]
         .filter((w) => [...w.children].some((c) => c.shadowRoot && c.shadowRoot.querySelector('svg'))).length,
       plantuml: document.querySelectorAll('.markdownx-plantuml-diagram svg').length,
+      // PlantUML reports a missing Graphviz as an SVG, not as an error
+      plantumlText: [...document.querySelectorAll('.markdownx-plantuml-diagram svg')].map((e) => e.textContent).join(' '),
       mathBlock: document.querySelectorAll('.markdownx-math-block .katex').length,
       mathInline: document.querySelectorAll('.markdownx-math-inline .katex').length,
+      mathInlineText: [...document.querySelectorAll('.markdownx-math-inline')].map((e) => e.textContent),
       errors: [...document.querySelectorAll('.markdownx-mermaid-error, .markdownx-plantuml-error, .markdownx-math-error')].map((e) => e.textContent),
       jsLinks,
       handlers,
@@ -157,15 +160,17 @@ async function checkRenderedPage(label, path) {
     let s;
     for (let i = 0; i < 60; i++) {
       s = await renderState();
-      if (s.mermaid && s.plantuml && s.mathBlock && s.mathInline) break;
+      if (s.mermaid && s.plantuml >= 2 && s.mathBlock && s.mathInline) break;
       await page.waitForTimeout(1000);
     }
     await page.screenshot({ path: `${OUT}/${label}.png`, fullPage: true });
     assert(s.errors.length === 0, `render errors: ${JSON.stringify(s.errors)}`);
     assert(s.mermaid > 0, 'no Mermaid SVG');
-    assert(s.plantuml > 0, 'no PlantUML SVG');
+    assert(s.plantuml >= 2, `expected 2 PlantUML SVGs, got ${s.plantuml}`);
+    assert(!/Graphviz|Cannot find/i.test(s.plantumlText), 'PlantUML rendered an error image (Graphviz)');
     assert(s.mathBlock > 0, 'no KaTeX block');
     assert(s.mathInline > 0, 'no KaTeX inline');
+    assert(!s.mathInlineText.some((t) => t.includes('5 and')), 'prices "$5 and $10" rendered as math');
   });
 
   await check(`${label}: XSS payloads are neutralised`, async () => {

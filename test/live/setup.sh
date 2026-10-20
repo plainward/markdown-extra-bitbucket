@@ -2,7 +2,7 @@
 # Boots a throwaway Bitbucket DC in Docker, installs the plugin and seeds test data.
 # Used by .github/workflows/live-test.yml; also runnable locally.
 #
-# Env: BB_VERSION (e.g. 8.19.28), PLUGIN_JAR, BITBUCKET_LICENSE (timebomb key)
+# Env: BB_VERSION (e.g. 8.19.28), PLUGIN_JAR, BITBUCKET_LICENSE (timebomb key), BB_HOME (optional)
 set -euo pipefail
 
 BB_URL="${BB_URL:-http://localhost:7990}"
@@ -25,7 +25,9 @@ echo "::group::Start Bitbucket $BB_VERSION"
 # ...basic.auth.filter.force.allow via Boolean.getBoolean to let it through.
 # Bitbucket 10's UPM also rejects unsigned apps ("Signature check failed!");
 # Marketplace builds are signed by Atlassian, CI builds are not.
+# BB_HOME (optional): host directory for the Bitbucket home instead of an anonymous volume.
 docker run -d --name bitbucket -p 7990:7990 \
+  ${BB_HOME:+-v "$BB_HOME":/var/atlassian/application-data/bitbucket} \
   -e SETUP_DISPLAYNAME="MarkdownX CI" \
   -e SETUP_BASEURL="$BB_URL" \
   -e SETUP_LICENSE="$BITBUCKET_LICENSE" \
