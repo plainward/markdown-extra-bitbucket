@@ -26,6 +26,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The i18n bundle was never registered, so the admin menu showed the raw key `markdownx.admin.label`.
 - `POST /plantuml/render` with an empty body returned `500` instead of `400`.
 - Removed the unconditional console log on every page load.
+- PlantUML class, component and state diagrams showed "Cannot find Graphviz" on servers without Graphviz (the usual case). PlantUML now uses its built-in Smetana layout unless the diagram sets `!pragma layout` itself.
+- Prices such as "$5 and $10" were rendered as inline math. Inline `$...$` now follows the Pandoc rule: no space after the opening `$`, no space before the closing `$`, no digit right after it.
+
+### Known issues
+
+- Mermaid, PlantUML and math are rendered on repository pages and in the file browser only. Pull request descriptions and diffs show the source.
 
 ### Build
 
