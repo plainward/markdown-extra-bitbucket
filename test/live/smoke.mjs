@@ -173,6 +173,19 @@ async function checkRenderedPage(label, path) {
     assert(!s.mathInlineText.some((t) => t.includes('5 and')), 'prices "$5 and $10" rendered as math');
   });
 
+  await check(`${label}: "View source" shows the PlantUML and math source`, async () => {
+    for (const [block, needle] of [['.markdownx-plantuml-diagram', 'Alice -> Bob'], ['.markdownx-math-block', 'E = mc^2']]) {
+      const wrapper = page.locator(block).first();
+      const toggle = wrapper.locator(':scope > .markdownx-source-toggle');
+      assert(await toggle.count() === 1, `no "View source" button in ${block}`);
+      await toggle.click({ force: true });
+      const source = await wrapper.locator(':scope > .markdownx-source').textContent();
+      assert(source && source.includes(needle), `${block} source not shown: ${source}`);
+      await toggle.click({ force: true });
+      assert(await wrapper.locator(':scope > .markdownx-source').count() === 0, `${block} source not hidden`);
+    }
+  });
+
   await check(`${label}: XSS payloads are neutralised`, async () => {
     const s = await renderState();
     // Without rendered output there is nothing to check, so this must not pass vacuously.

@@ -6,6 +6,7 @@
 
 import { createScript } from './utils/csp.js';
 import { hasInlineMath, splitInlineMath } from './utils/inline-math.mjs';
+import { addSourceToggle } from './utils/source-toggle.js';
 
 let katexLoaded = false;
 let katexLoading = null;
@@ -71,6 +72,7 @@ export async function enhanceMath(container) {
         // \includegraphics are XSS vectors for anyone who can push Markdown.
         trust: false,
       });
+      addSourceToggle(wrapper, source);
       preEl.replaceWith(wrapper);
     } catch (err) {
       const errorDiv = document.createElement('div');

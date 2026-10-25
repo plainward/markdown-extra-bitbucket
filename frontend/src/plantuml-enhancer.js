@@ -5,6 +5,7 @@
  */
 
 import DOMPurify from 'dompurify';
+import { addSourceToggle } from './utils/source-toggle.js';
 
 function getContextPath() {
   return (typeof AJS !== 'undefined' && AJS.contextPath) ? AJS.contextPath() : '';
@@ -52,6 +53,7 @@ export async function enhancePlantUml(container) {
       const wrapper = document.createElement('div');
       wrapper.className = 'markdownx-plantuml-diagram';
       wrapper.innerHTML = sanitizeSvg(result.svg);
+      addSourceToggle(wrapper, source);
 
       loading.remove();
       preEl.replaceWith(wrapper);

@@ -33,7 +33,10 @@
   transition: opacity 0.2s;
 }
 
-.markdownx-mermaid-diagram:hover .markdownx-source-toggle {
+.markdownx-mermaid-diagram:hover .markdownx-source-toggle,
+.markdownx-plantuml-diagram:hover .markdownx-source-toggle,
+.markdownx-math-block:hover .markdownx-source-toggle,
+.markdownx-source-toggle:focus {
   opacity: 1;
 }
 
@@ -41,7 +44,8 @@
   background: #e1e4e8;
 }
 
-.markdownx-mermaid-source {
+.markdownx-mermaid-source,
+.markdownx-source {
   margin-top: 12px;
   padding: 12px;
   background: #f6f8fa;
@@ -74,6 +78,7 @@
 /* ==================== PlantUML ==================== */
 
 .markdownx-plantuml-diagram {
+  position: relative;
   margin: 16px 0;
   padding: 16px;
   background: #fafbfc;
@@ -101,6 +106,7 @@
 /* ==================== Math (KaTeX) ==================== */
 
 .markdownx-math-block {
+  position: relative;
   margin: 16px 0;
   padding: 16px;
   text-align: center;
