@@ -18,10 +18,25 @@
   height: auto;
 }
 
-.markdownx-source-toggle {
+.markdownx-source-actions {
   position: absolute;
   top: 8px;
   right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.markdownx-mermaid-diagram:hover .markdownx-source-actions,
+.markdownx-plantuml-diagram:hover .markdownx-source-actions,
+.markdownx-math-block:hover .markdownx-source-actions,
+.markdownx-source-actions:focus-within {
+  opacity: 1;
+}
+
+.markdownx-source-toggle,
+.markdownx-source-copy {
   padding: 2px 8px;
   font-size: 11px;
   color: #586069;
@@ -29,22 +44,13 @@
   border: 1px solid #d1d5da;
   border-radius: 3px;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s;
 }
 
-.markdownx-mermaid-diagram:hover .markdownx-source-toggle,
-.markdownx-plantuml-diagram:hover .markdownx-source-toggle,
-.markdownx-math-block:hover .markdownx-source-toggle,
-.markdownx-source-toggle:focus {
-  opacity: 1;
-}
-
-.markdownx-source-toggle:hover {
+.markdownx-source-toggle:hover,
+.markdownx-source-copy:hover {
   background: #e1e4e8;
 }
 
-.markdownx-mermaid-source,
 .markdownx-source {
   margin-top: 12px;
   padding: 12px;

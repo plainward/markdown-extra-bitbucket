@@ -110,7 +110,11 @@ await check('PlantUML REST: sandbox blocks local file include', async () => {
 const browser = await chromium.launch();
 // Authenticate every browser request with basic auth rather than driving the
 // login form, whose markup differs between Bitbucket 8.x, 9.x and 10.x.
-const context = await browser.newContext({ viewport: { width: 1400, height: 1000 }, extraHTTPHeaders: ADMIN });
+const context = await browser.newContext({
+  viewport: { width: 1400, height: 1000 },
+  extraHTTPHeaders: ADMIN,
+  permissions: ['clipboard-read', 'clipboard-write'],
+});
 const page = await context.newPage();
 const dialogs = [];
 const consoleErrors = [];
@@ -173,11 +177,24 @@ async function checkRenderedPage(label, path) {
     assert(!s.mathInlineText.some((t) => t.includes('5 and')), 'prices "$5 and $10" rendered as math');
   });
 
-  await check(`${label}: "View source" shows the PlantUML and math source`, async () => {
-    for (const [block, needle] of [['.markdownx-plantuml-diagram', 'Alice -> Bob'], ['.markdownx-math-block', 'E = mc^2']]) {
+  await check(`${label}: "View source" and "Copy" work for Mermaid, PlantUML and math`, async () => {
+    const blocks = [
+      ['.markdownx-mermaid-diagram', 'flowchart LR'],
+      ['.markdownx-plantuml-diagram', 'Alice -> Bob'],
+      ['.markdownx-math-block', 'E = mc^2'],
+    ];
+    for (const [block, needle] of blocks) {
       const wrapper = page.locator(block).first();
-      const toggle = wrapper.locator(':scope > .markdownx-source-toggle');
+      const toggle = wrapper.locator(':scope > .markdownx-source-actions > .markdownx-source-toggle');
       assert(await toggle.count() === 1, `no "View source" button in ${block}`);
+      const copy = wrapper.locator(':scope > .markdownx-source-actions > .markdownx-source-copy');
+      assert(await copy.count() === 1, `no "Copy" button in ${block}`);
+      await copy.click({ force: true });
+      let copied;
+      for (let i = 0; i < 10 && (copied = await copy.textContent()) === 'Copy'; i++) await page.waitForTimeout(100);
+      assert(copied === 'Copied', `${block} copy failed: ${copied}`);
+      const clip = await page.evaluate(() => navigator.clipboard.readText());
+      assert(clip.includes(needle), `${block} clipboard has: ${clip.slice(0, 200)}`);
       await toggle.click({ force: true });
       const source = await wrapper.locator(':scope > .markdownx-source').textContent();
       assert(source && source.includes(needle), `${block} source not shown: ${source}`);

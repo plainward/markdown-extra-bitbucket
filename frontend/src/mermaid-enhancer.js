@@ -10,6 +10,7 @@
  */
 
 import { createScript } from './utils/csp.js';
+import { addSourceToggle } from './utils/source-toggle.js';
 
 const processedBlocks = new WeakSet();
 const _debug = typeof localStorage !== 'undefined' && localStorage.getItem('markdownx-debug') === '1';
@@ -168,27 +169,7 @@ export async function enhanceMermaid(container, settings) {
         }
       }
 
-      // Add a toggle to show/hide source
-      const toggle = document.createElement('button');
-      toggle.className = 'markdownx-source-toggle';
-      toggle.textContent = 'View source';
-      toggle.type = 'button';
-      toggle.addEventListener('click', () => {
-        const sourceEl = wrapper.querySelector('.markdownx-mermaid-source');
-        if (sourceEl) {
-          sourceEl.remove();
-          toggle.textContent = 'View source';
-        } else {
-          const pre = document.createElement('pre');
-          pre.className = 'markdownx-mermaid-source';
-          const code = document.createElement('code');
-          code.textContent = source;
-          pre.appendChild(code);
-          wrapper.appendChild(pre);
-          toggle.textContent = 'Hide source';
-        }
-      });
-      wrapper.appendChild(toggle);
+      addSourceToggle(wrapper, source);
 
       preEl.replaceWith(wrapper);
     } catch (err) {
