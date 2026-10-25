@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] — 2026-10-25
+
+Same code as 1.0.6. Atlassian Marketplace needs a unique version number per build, so the Bitbucket 10 JAR is released as 1.0.7 (`markdown-extra-1.0.7-bb10.jar`); Bitbucket 8.19–9.x stays on 1.0.6.
+
 ## [1.0.6] — 2026-10-25
 
 ### Added
